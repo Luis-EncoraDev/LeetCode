@@ -1,30 +1,27 @@
-class Solution(object):
+class Solution:
+    def findMedianSortedArrays(self, nums1: List[int], nums2: List[int]) -> float:
+        if len(nums1) > len(nums2):
+            nums1, nums2 = nums2, nums1
 
-    def isMatch(self, text, pattern):
+        a, b = len(nums1), len(nums2)
+        s = 0
+        e = a
+        while s <=e:
+            pa = (s+e) // 2 
+            pb = (a + b + 1) // 2 - pa
 
-        text_length = len(text)
-        pattern_length = len(pattern)
-        dp = [[False] * (pattern_length + 1) for _ in range(text_length + 1)]
-        d  p[0][0] = True
+            max_la = float('-inf') if pa == 0 else nums1[pa - 1]
+            max_lb = float('-inf') if pb == 0 else nums2[pb - 1] 
+            min_ra = float('inf') if pa == a else nums1[pa]
+            min_rb = float('inf') if pb == b else nums2[pb]
 
-        for pattern_idx in range(1, pattern_length + 1):
-            if pattern[pattern_idx - 1] == '*':
-                dp[0][pattern_idx] = dp[0][pattern_idx - 2]
-
-        for text_idx in range(1, text_length + 1):
-
-            for pattern_idx in range(1, pattern_length + 1):
-                current_text_char = text[text_idx - 1]
-                current_pattern_char = pattern[pattern_idx - 1]
-
-                if current_pattern_char == '.' or current_pattern_char == current_text_char:
-                    dp[text_idx][pattern_idx] = dp[text_idx - 1][pattern_idx - 1]
-
-                elif current_pattern_char == '*':
-                    dp[text_idx][pattern_idx] = dp[text_idx][pattern_idx - 2]
-                    preceding_pattern_char = pattern[pattern_idx - 2]
-
-                    if preceding_pattern_char == '.' or preceding_pattern_char == current_text_char:
-                        dp[text_idx][pattern_idx] = dp[text_idx][pattern_idx] or dp[text_idx - 1][pattern_idx]
-                        
-        return dp[text_length][pattern_length]
+            if max_la <= min_rb and max_lb <= min_ra:
+                d1 = max(max_la, max_lb)
+                d2 = min(min_ra, min_rb)
+                if (len(nums1) + len(nums2)) % 2 == 0:
+                    return (d1+d2) / 2
+                return d1
+            elif max_la > min_rb:
+                e = pa - 1
+            elif max_lb > min_ra:
+                s = pa + 1
