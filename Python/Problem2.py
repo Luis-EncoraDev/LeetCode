@@ -1,30 +1,62 @@
-class Solution(object):
+class Node:
 
-    def isMatch(self, text, pattern):
+    def __init__(self, key=None, value=None):
+        self.key = key
+        self.value = value
+        self.prev = None
+        self.next = None
 
-        text_length = len(text)
-        pattern_length = len(pattern)
-        dp = [[False] * (pattern_length + 1) for _ in range(text_length + 1)]
-        d  p[0][0] = True
+class LRUCache:
+    
+    def __init__(self, capacity: int):
+        self.capacity = capacity
+        self.cache = {}
+        self.head = Node()
+        self.tail = Node()
+        self.head.next = self.tail
+        self.tail.prev = self.head
 
-        for pattern_idx in range(1, pattern_length + 1):
-            if pattern[pattern_idx - 1] == '*':
-                dp[0][pattern_idx] = dp[0][pattern_idx - 2]
+    def addNode(self, node):
+        """Agrega un nodo justo después de head"""
+        node.prev = self.head
+        node.next = self.head.next
+        self.head.next.prev = node
+        self.head.next = node
 
-        for text_idx in range(1, text_length + 1):
+    def removeNode(self, node):
+        """Desconecta un nodo de la lista"""
+        prevNode = node.prev
+        nextNode = node.next
+        prevNode.next = nextNode
+        nextNode.prev = prevNode
 
-            for pattern_idx in range(1, pattern_length + 1):
-                current_text_char = text[text_idx - 1]
-                current_pattern_char = pattern[pattern_idx - 1]
+    def moveToTop(self, node):
+        """Mueve un nodo a la posición más reciente (inmediatamente después de head)"""
+        self.removeNode(node)
+        self.addNode(node)
 
-                if current_pattern_char == '.' or current_pattern_char == current_text_char:
-                    dp[text_idx][pattern_idx] = dp[text_idx - 1][pattern_idx - 1]
+    def getAndRemoveTail(self):
+        """Remueve y retorna el nodo menos recientemente usado (antes del tail)"""
+        node = self.tail.prev
+        self.removeNode(node)
+        return node
 
-                elif current_pattern_char == '*':
-                    dp[text_idx][pattern_idx] = dp[text_idx][pattern_idx - 2]
-                    preceding_pattern_char = pattern[pattern_idx - 2]
+    def get(self, key: int) -> int:
+        node = self.cache.get(key)
+        if not node:
+            return -1
+        self.moveToTop(node)
+        return node.value
 
-                    if preceding_pattern_char == '.' or preceding_pattern_char == current_text_char:
-                        dp[text_idx][pattern_idx] = dp[text_idx][pattern_idx] or dp[text_idx - 1][pattern_idx]
-                        
-        return dp[text_length][pattern_length]
+    def put(self, key: int, value: int) -> None:
+        node = self.cache.get(key)
+        if not node:
+            newNode = Node(key, value)
+            self.cache[key] = newNode
+            self.addNode(newNode)
+            if len(self.cache) > self.capacity:
+                tail = self.getAndRemoveTail()
+                del self.cache[tail.key]
+        else:
+            node.value = value
+            self.moveToTop(node)
